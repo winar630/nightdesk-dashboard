@@ -525,8 +525,11 @@ function drawFrame(){
   ctx.save(); ctx.shadowColor = dark ? 'rgba(255,255,255,.35)' : 'rgba(120,120,200,.25)'; ctx.shadowBlur = dark ? 5 : 2;
   for (let k = 0; k < S; k++) { const ph = k*2*Math.PI/S, tw = 4 + (k % 3);
     ctx.beginPath();
-    for (let j = 0; j <= steps; j++) { const th = j*2*Math.PI/steps, ps = ph + tw*th + t*(0.5 + (k%4)*0.12), rt = tube*(0.75 + 0.35*Math.sin(3*th + k + t*0.7));
-      const rad = Rr + rt*Math.cos(ps), x = cx + rad*Math.cos(th), y = cy + rad*tilt*Math.sin(th) - rt*Math.sin(ps)*0.85;
+    for (let j = 0; j <= steps; j++) { const th = j*2*Math.PI/steps, ps = ph + tw*th + t*(0.5 + (k%4)*0.12);
+      // 숨 쉬기: 링을 따라 도는 파도(3마디)가 줄기를 바깥으로 밀어냈다가 다시 안으로 당긴다
+      const wave = Math.sin(3*th - t*1.4 + k*0.35), swell = 0.5 + 0.5*Math.sin(t*0.9 + k*0.2);
+      const amp = W < 520 ? 0.5 : 1, rt = tube*(0.7 + amp*(0.55*wave*wave + 0.25*swell));
+      const rad = Rr + rt*Math.cos(ps) + tube*amp*(0.55*wave + 0.25*swell - 0.2), x = cx + rad*Math.cos(th), y = cy + rad*tilt*Math.sin(th) - rt*Math.sin(ps)*0.85;
       j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
     ctx.globalAlpha = 0.22 + 0.18*((k % 5)/4); ctx.stroke(); }
   ctx.restore();
