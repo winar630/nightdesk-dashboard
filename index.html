@@ -531,12 +531,11 @@ function drawFrame(){
       j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
     ctx.globalAlpha = 0.22 + 0.18*((k % 5)/4); ctx.stroke(); }
   ctx.restore();
-  // 주문표 하나가 링을 탄다 (뜨거운 불꽃 머리 + 꼬리)
+  // 주문표 하나가 링을 탄다 (초록 빛 머리 + 꼬리)
   const th = -Math.PI/2 + t*0.45, [px, py] = ring(1, th);
-  ctx.save(); ctx.globalAlpha = 1; ctx.shadowColor = FLARE; ctx.shadowBlur = 10;
-  const gl = ctx.createRadialGradient(px, py, 0, px, py, 16); gl.addColorStop(0, '#fff'); gl.addColorStop(.35, CORE); gl.addColorStop(.7, FLARE); gl.addColorStop(1, 'transparent');
-  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(px, py, 16, 0, Math.PI*2); ctx.fill(); ctx.restore();
-  for (let q = 1; q < 18; q++) { const [qx, qy] = ring(1, th - q*0.04); ctx.globalAlpha = (1 - q/18)*0.7; ctx.fillStyle = q < 6 ? CORE : FLARE;
+  ctx.globalAlpha = 1; const gl = ctx.createRadialGradient(px, py, 0, px, py, 16); gl.addColorStop(0, '#fff'); gl.addColorStop(.35, cols[4]); gl.addColorStop(1, 'transparent');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(px, py, 16, 0, Math.PI*2); ctx.fill();
+  for (let q = 1; q < 18; q++) { const [qx, qy] = ring(1, th - q*0.04); ctx.globalAlpha = (1 - q/18)*0.7; ctx.fillStyle = cols[4];
     ctx.beginPath(); ctx.arc(qx, qy, 3*(1 - q/20), 0, Math.PI*2); ctx.fill(); }
   ctx.globalAlpha = 1;
 }
