@@ -174,6 +174,19 @@ body{margin:0}
   background:conic-gradient(from var(--ang),transparent 0deg 280deg,var(--pc) 350deg,transparent 360deg)}
 .pnl.pl-flat::after{opacity:.9}
 @keyframes orbit{to{--ang:360deg}}
+.bk{position:relative;isolation:isolate}
+.bk[aria-pressed="true"]{--pc:#b9bfcb;--ph:#fff;border-color:color-mix(in srgb,var(--pc) 45%,var(--border));box-shadow:0 0 0 1px color-mix(in srgb,var(--pc) 16%,transparent),0 8px 20px -12px var(--pc)}
+:root[data-theme="dark"] .bk[aria-pressed="true"].bk-flat{--pc:#e9edf5}
+.bk[aria-pressed="true"].bk-up{--pc:var(--up)}
+.bk[aria-pressed="true"].bk-down{--pc:var(--down)}
+.bk[aria-pressed="true"]::before,.bk[aria-pressed="true"]::after{content:"";position:absolute;inset:-2px;border-radius:11px;pointer-events:none;z-index:1;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+  animation:orbit 10s linear infinite}
+.bk[aria-pressed="true"]::before{padding:2.5px;
+  background:conic-gradient(from var(--ang),transparent 0deg 200deg,color-mix(in srgb,var(--pc) 30%,transparent) 260deg,var(--pc) 330deg,var(--ph) 350deg,var(--pc) 357deg,transparent 360deg)}
+.bk[aria-pressed="true"]::after{padding:3px;filter:blur(6px);opacity:.7;
+  background:conic-gradient(from var(--ang),transparent 0deg 280deg,var(--pc) 350deg,transparent 360deg)}
+
 .pnl .big{font:800 40px/1 var(--mono);letter-spacing:-.01em;margin:4px 0 2px;transition:color .3s}
 .pnl .big small{font-size:22px;vertical-align:top;margin-right:2px}
 .pnl .sb{font:11px var(--mono);color:var(--text-secondary)}
@@ -444,7 +457,7 @@ function renderReactor(d){
   const act = d.agents.find(a => a.state === 'active');
   $('orbl').innerHTML = `DESK<small style="--k:var(--${GROUP[act?.id] || 'c3'})">${act ? esc(act.name) + ' 작동 중' : '대기'}</small>`;
   $('book').innerHTML = (d.holdings.length ? '' : '<div class="bk" style="cursor:default"><div class="s">보유 종목 없음 · 승인 대기 중인 종목은 30분봉 신호를 기다립니다</div></div>') + d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
-    return `<div class="bk" role="button" tabindex="0" aria-pressed="${i===sel}" data-i="${i}"><div class="h"><b>${esc(x.name)}</b><span class="c ${sgn(c)}">${pct(c)}</span></div>
+    return `<div class="bk ${c > 0 ? 'bk-up' : c < 0 ? 'bk-down' : 'bk-flat'}" role="button" tabindex="0" aria-pressed="${i===sel}" data-i="${i}"><div class="h"><b>${esc(x.name)}</b><span class="c ${sgn(c)}">${pct(c)}</span></div>
       <div class="s"><span><span class="chip" style="--k:var(--${typeK(x.type)})">${esc(x.type)}</span></span><span>${esc(x.tp_stage || '')}</span></div>
       <div class="rng" title="손절 ${fmt(lo)} · 매수 ${fmt(x.buy)} · 목표 ${fmt(hi)}"><u style="left:${p(x.buy)}%"></u>${x.target1 ? `<u style="left:${p(x.target1)}%;background:var(--up)"></u>` : ''}<i style="left:${p(x.price)}%"></i></div>
       <div class="s" style="margin:4px 0 0"><span>손절 ${fmt(lo)}</span><span>${fmt(x.price)}</span><span>2차 ${fmt(hi)}</span></div></div>`; }).join('')
