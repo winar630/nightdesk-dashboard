@@ -122,8 +122,8 @@ body{margin:0}
   background:radial-gradient(circle at 36% 30%,#fff 0%,#f4f6fb 45%,#d7dcea 100%);box-shadow:0 18px 30px -12px rgba(30,40,80,.45),inset 0 -10px 18px rgba(80,90,140,.18);display:grid;place-items:center}
 :root[data-theme="dark"] .orb{background:radial-gradient(circle at 36% 30%,#3a4258 0%,#20263a 55%,#141826 100%);box-shadow:0 18px 30px -12px rgba(0,0,0,.8),inset 0 -10px 18px rgba(0,0,0,.4)}
 .orb::before{content:"";position:absolute;inset:-26px;border-radius:50%;z-index:-1;pointer-events:none;
-  background:radial-gradient(circle,rgba(255,196,90,.55) 0%,rgba(255,90,50,.32) 38%,rgba(216,30,60,.12) 58%,transparent 72%);animation:corona 3.2s ease-in-out infinite}
-@keyframes corona{50%{transform:scale(1.12);opacity:.75}}
+  background:conic-gradient(from 0deg,rgba(75,141,255,.32),rgba(255,106,160,.32),rgba(255,130,71,.32),rgba(243,181,44,.32),rgba(34,207,147,.32),rgba(157,136,255,.32),rgba(75,141,255,.32));-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%);animation:corona 3.2s ease-in-out infinite}
+@keyframes corona{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.12);opacity:.8}100%{transform:rotate(360deg) scale(1)}}
 .orb .lg{width:66px;height:66px;background:url(assets/desk-logo.png) center/contain no-repeat;animation:breathe 4s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.05)}}
 .orb .shadow{position:absolute;left:50%;top:100%;width:120px;height:18px;margin:10px 0 0 -60px;border-radius:50%;background:radial-gradient(closest-side,rgba(40,50,90,.28),transparent)}
@@ -480,8 +480,10 @@ function drawFrame(){
   const dark = root.dataset.theme === 'dark';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   // 태양 계열: 진홍 → 빨강 → 주황 → 금빛 → 빨강
-  const cols = ['#8e1028', '#d81e3c', '#ff4b36', '#ff8a2a', '#ffc24d', '#ff5a3a', '#b3122f', '#8e1028'];
-  const FLARE = '#ff6a3a', CORE = '#ffd36b';
+  // 코일·코로나·태양풍은 무지개, 링을 도는 주문표만 태양색(흰 심지·금빛·빨강)이라 눈에 띈다
+  const cols = ['--c1','--c6','--c2','--c4','--c3','--c5','--c1'].map(css);
+  const FLARE = '#ff4b36', CORE = '#ffd36b';
+  const hue = a => `hsl(${((a*180/Math.PI) % 360 + 360) % 360} 95% ${dark ? 62 : 52}%)`;
   let grad; try { grad = ctx.createConicGradient(t*0.15, cx, cy); cols.forEach((c,i) => grad.addColorStop(i/(cols.length-1), c)); } catch (e) { grad = ctx.createLinearGradient(cx - Rr, 0, cx + Rr, 0); cols.forEach((c,i) => grad.addColorStop(i/(cols.length-1), c)); }
   const ring = (k, a) => [cx + Rr*k*Math.cos(a), cy + Rr*k*tilt*Math.sin(a)];
   // 코로나: 링 둘레가 숨 쉬듯 빛난다
@@ -489,11 +491,11 @@ function drawFrame(){
   ctx.save(); if (dark) ctx.globalCompositeOperation = 'lighter';
   for (const [w, al, bl] of [[Rr*0.42, 0.07 + 0.04*pulse, 40], [Rr*0.22, 0.10 + 0.05*pulse, 22]]) {
     ctx.beginPath(); ctx.ellipse(cx, cy, Rr, Rr*tilt, 0, 0, Math.PI*2);
-    ctx.strokeStyle = FLARE; ctx.lineWidth = w; ctx.globalAlpha = al; ctx.shadowColor = FLARE; ctx.shadowBlur = bl; ctx.stroke(); }
+    ctx.strokeStyle = grad; ctx.lineWidth = w; ctx.globalAlpha = al; ctx.shadowColor = cols[4]; ctx.shadowBlur = bl; ctx.stroke(); }
   ctx.restore();
   // 퍼지는 파동 (붉은 열기)
   for (let k = 0; k < 3; k++) { const p = ((t*0.25 + k/3) % 1); ctx.beginPath(); ctx.ellipse(cx, cy, Rr*(0.25 + p*0.95), Rr*tilt*(0.25 + p*0.95), 0, 0, Math.PI*2);
-    ctx.strokeStyle = cols[2]; ctx.globalAlpha = (1 - p)*0.16; ctx.lineWidth = 1.2; ctx.stroke(); }
+    ctx.strokeStyle = grad; ctx.globalAlpha = (1 - p)*0.16; ctx.lineWidth = 1.2; ctx.stroke(); }
   // 태양풍: 링에서 바깥으로 흘러 나가는 불티
   ctx.save(); if (dark) ctx.globalCompositeOperation = 'lighter';
   const N = W < 520 ? 70 : 140;
@@ -503,23 +505,26 @@ function drawFrame(){
     const k0 = 1 + (seed < .5 ? -1 : 1)*0.14, k1 = k0 + (k0 > 1 ? 1 : -0.6)*ph*0.55;
     const [x0, y0] = ring(k1 - (k0 > 1 ? 0.06 : -0.04), a - 0.02), [x1, y1] = ring(k1, a);
     ctx.globalAlpha = (1 - ph)*(0.25 + 0.5*seed);
-    ctx.strokeStyle = ph < .35 ? CORE : FLARE; ctx.lineWidth = 1.2*(1 - ph) + .3;
+    ctx.strokeStyle = hue(a + t*0.15); ctx.lineWidth = 1.2*(1 - ph) + .3;
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); }
   ctx.restore();
-  // 코일 (붉은 그라데이션)
-  const S = W < 520 ? 18 : 30, steps = 150, tube = Rr*0.16; ctx.lineWidth = W < 520 ? .75 : .9; ctx.strokeStyle = grad;
-  ctx.save(); ctx.shadowColor = FLARE; ctx.shadowBlur = dark ? 6 : 3;
+  // 코일 (무지개)
+  const S = W < 520 ? 18 : 30, steps = 150, tube = Rr*0.16; ctx.lineWidth = W < 520 ? .7 : .85; ctx.strokeStyle = grad;
+  ctx.save(); ctx.shadowColor = dark ? 'rgba(255,255,255,.35)' : 'rgba(120,120,200,.25)'; ctx.shadowBlur = dark ? 5 : 2;
   for (let k = 0; k < S; k++) { const ph = k*2*Math.PI/S, tw = 4 + (k % 3);
     ctx.beginPath();
     for (let j = 0; j <= steps; j++) { const th = j*2*Math.PI/steps, ps = ph + tw*th + t*(0.5 + (k%4)*0.12), rt = tube*(0.75 + 0.35*Math.sin(3*th + k + t*0.7));
       const rad = Rr + rt*Math.cos(ps), x = cx + rad*Math.cos(th), y = cy + rad*tilt*Math.sin(th) - rt*Math.sin(ps)*0.85;
       j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-    ctx.globalAlpha = 0.26 + 0.2*((k % 5)/4); ctx.stroke(); }
+    ctx.globalAlpha = 0.22 + 0.18*((k % 5)/4); ctx.stroke(); }
   ctx.restore();
   // 주문표 하나가 링을 탄다 (뜨거운 불꽃 머리 + 꼬리)
   const th = -Math.PI/2 + t*0.45, [px, py] = ring(1, th);
-  ctx.globalAlpha = 1; const gl = ctx.createRadialGradient(px, py, 0, px, py, 22); gl.addColorStop(0, '#fff'); gl.addColorStop(.25, CORE); gl.addColorStop(.6, FLARE); gl.addColorStop(1, 'transparent');
-  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(px, py, 22, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.globalAlpha = 1; ctx.shadowColor = FLARE; ctx.shadowBlur = 24;
+  const gl = ctx.createRadialGradient(px, py, 0, px, py, 24); gl.addColorStop(0, '#fff'); gl.addColorStop(.22, '#fff6d8'); gl.addColorStop(.4, CORE); gl.addColorStop(.68, FLARE); gl.addColorStop(1, 'transparent');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(px, py, 24, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = FLARE; ctx.globalAlpha = 0.5 + 0.5*pulse; ctx.beginPath(); ctx.arc(px, py, 12 + 4*pulse, 0, Math.PI*2); ctx.stroke(); ctx.restore();
   for (let q = 1; q < 18; q++) { const [qx, qy] = ring(1, th - q*0.04); ctx.globalAlpha = (1 - q/18)*0.7; ctx.fillStyle = q < 6 ? CORE : FLARE;
     ctx.beginPath(); ctx.arc(qx, qy, 3*(1 - q/20), 0, Math.PI*2); ctx.fill(); }
   ctx.globalAlpha = 1;
