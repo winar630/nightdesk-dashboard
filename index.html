@@ -522,7 +522,7 @@ function drawFrame(){
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); }
   ctx.restore();
   // 코일 (무지개)
-  const S = W < 520 ? 18 : 30, steps = 150, tube = Rr*0.16; ctx.lineWidth = W < 520 ? .7 : .85; ctx.strokeStyle = grad;
+  const S = W < 520 ? 18 : 30, steps = 150, tube = Rr*0.16; ctx.lineWidth = W < 520 ? 1.4 : 1.7; ctx.strokeStyle = grad;
   ctx.save(); ctx.shadowColor = dark ? 'rgba(255,255,255,.35)' : 'rgba(120,120,200,.25)'; ctx.shadowBlur = dark ? 5 : 2;
   for (let k = 0; k < S; k++) { const ph = k*2*Math.PI/S, tw = 4 + (k % 3);
     ctx.beginPath();
