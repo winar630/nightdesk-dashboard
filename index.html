@@ -456,7 +456,7 @@ function renderReactor(d){
     core.appendChild(el); return {a, el, g}; });
   const act = d.agents.find(a => a.state === 'active');
   $('orbl').innerHTML = `DESK<small style="--k:var(--${GROUP[act?.id] || 'c3'})">${act ? esc(act.name) + ' 작동 중' : '대기'}</small>`;
-  $('book').innerHTML = (d.holdings.length ? '' : '<div class="bk" style="cursor:default"><div class="s">보유 종목 없음 · 승인 대기 중인 종목은 30분봉 신호를 기다립니다</div></div>') + d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
+  $('book').innerHTML = (d.holdings.length ? '' : '<div class="bk" style="cursor:default"><div class="s">보유 종목 없음 · 승인 대기 종목은 30분봉 추세 + 5분봉 타점을 기다립니다</div></div>') + d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
     return `<div class="bk ${c > 0 ? 'bk-up' : c < 0 ? 'bk-down' : 'bk-flat'}" role="button" tabindex="0" aria-pressed="${i===sel}" data-i="${i}"><div class="h"><b>${esc(x.name)}</b><span class="c ${sgn(c)}">${pct(c)}</span></div>
       <div class="s"><span><span class="chip" style="--k:var(--${typeK(x.type)})">${esc(x.type)}</span></span><span>${esc(x.tp_stage || '')}</span></div>
       <div class="rng" title="손절 ${fmt(lo)} · 매수 ${fmt(x.buy)} · 목표 ${fmt(hi)}"><u style="left:${p(x.buy)}%"></u>${x.target1 ? `<u style="left:${p(x.target1)}%;background:var(--up)"></u>` : ''}<i style="left:${p(x.price)}%"></i></div>
@@ -582,7 +582,7 @@ function drawEquity(box, P){
 function renderTape(d){
   const h = d.holdings[sel], narrow = innerWidth < 860;
   if (!h) { $('tks').innerHTML = ''; $('tPx').textContent = ''; $('tCh').innerHTML = ''; $('tTy').innerHTML = ''; $('tMeta').textContent = '';
-    $('taper').textContent = ''; $('cT').innerHTML = '<div class="tip"></div><p class="muted mono" style="padding:40px 0;text-align:center">보유 종목이 없습니다. 승인된 종목이 30분봉 신호로 체결되면 여기에 차트가 나옵니다.</p>'; $('cV').innerHTML = ''; return; }
+    $('taper').textContent = ''; $('cT').innerHTML = '<div class="tip"></div><p class="muted mono" style="padding:40px 0;text-align:center">보유 종목이 없습니다. 승인된 종목이 5분봉 타점에서 체결되면 여기에 차트가 나옵니다.</p>'; $('cV').innerHTML = ''; return; }
   $('tks').innerHTML = d.holdings.map((x,i) => `<button class="tk" aria-pressed="${i===sel}" data-i="${i}">${esc(x.name)} <span class="${sgn(x.day_change_pct)}">${pct(x.day_change_pct)}</span></button>`).join('');
   $('tks').querySelectorAll('.tk').forEach(b => b.onclick = () => { sel = +b.dataset.i; renderSel(); });
   $('tPx').textContent = fmt(h.price); $('tPx').className = 'px ' + sgn(h.day_change_pct);
@@ -702,7 +702,14 @@ $('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' 
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => render(D), 150); });
 render(EMBED);
 if (!RM) R.raf = requestAnimationFrame(loop);
-async function refresh(){ try { const r = await fetch('data/status.json', {cache: 'no-store'}); if (r.ok) { const d = await r.json(); loadedAt = Date.now(); render(d); } } catch (e) {} }
+// 장중 값은 live 가지(5분마다 갱신, 페이지 다시 짓기 없음)에서, 없으면 페이지의 data/status.json 에서. 둘 중 새것을 쓴다
+const LIVE = 'https://raw.githubusercontent.com/winar630/nightdesk-dashboard/live/status.json';
+async function get(u){ try { const r = await fetch(u, {cache: 'no-store'}); return r.ok ? await r.json() : null; } catch (e) { return null; } }
+async function refresh(){
+  const [a, b] = await Promise.all([get(LIVE + '?t=' + Math.floor(Date.now()/60000)), get('data/status.json')]);
+  const d = [a, b].filter(Boolean).sort((x, y) => String(y.updated_at || '').localeCompare(String(x.updated_at || '')))[0];
+  if (d) { loadedAt = Date.now(); render(d); }
+}
 if (location.protocol.startsWith('http')) { refresh(); setInterval(refresh, 60000); }
 </script>
 </body>
