@@ -497,7 +497,11 @@ function drawFrame(){
   const cols = ['--c1','--c6','--c2','--c4','--c3','--c5','--c1'].map(css);
   const FLARE = '#ff4b36', CORE = '#ffd36b';
   const hue = a => `hsl(${((a*180/Math.PI) % 360 + 360) % 360} 95% ${dark ? 62 : 52}%)`;
-  let grad; try { grad = ctx.createConicGradient(t*0.15, cx, cy); cols.forEach((c,i) => grad.addColorStop(i/(cols.length-1), c)); } catch (e) { grad = ctx.createLinearGradient(cx - Rr, 0, cx + Rr, 0); cols.forEach((c,i) => grad.addColorStop(i/(cols.length-1), c)); }
+  // 무지개 띠: 빨강 구간을 넓고 진하게(약 20% 강조)
+  const RED = dark ? '#ff4a5c' : '#e8283f';
+  const stops = [[0, cols[0]], [.16, cols[1]], [.27, RED], [.38, RED], [.49, cols[2]], [.63, cols[3]], [.77, cols[4]], [.89, cols[5]], [1, cols[0]]];
+  let grad; try { grad = ctx.createConicGradient(t*0.15, cx, cy); } catch (e) { grad = ctx.createLinearGradient(cx - Rr, 0, cx + Rr, 0); }
+  stops.forEach(([o, c]) => grad.addColorStop(o, c));
   const ring = (k, a) => [cx + Rr*k*Math.cos(a), cy + Rr*k*tilt*Math.sin(a)];
   // (바깥 띠구름 코로나는 제거 — 가는 코일 줄기가 또렷하게 보이도록)
   const pulse = 0.5 + 0.5*Math.sin(t*1.3);
