@@ -363,7 +363,7 @@ function renderTop(d){
   $('kBal').textContent = masked ? '₩••,•••,•••' : '₩' + fmt(d.balance);
   $('kDay').innerHTML = `<span class="${sgn(dd)}">${pct(dp)}</span>`;
   $('kTot').innerHTML = `<span class="${sgn(tot)}">${pct(tot)}</span>`;
-  $('kAi').textContent = d.ops ? '$' + d.ops.ai_cost_usd_month.toFixed(2) : '–';
+  $('kAi').textContent = d.ops && d.ops.ai_cost_usd_month != null ? '$' + d.ops.ai_cost_usd_month.toFixed(2) : '–';
   $('mask').textContent = masked ? '보기' : '가리기';
   $('theme').textContent = root.dataset.theme === 'dark' ? '라이트' : '다크';
   const act = d.agents.filter(a => a.state === 'active').map(a => a.name), L = d.limits, P = d.pipeline;
@@ -376,9 +376,9 @@ function renderTop(d){
     return `<span class="wi"><span class="chip" style="--k:${kOfBot(l.bot)}">${esc(l.bot)}</span><time>${esc(l.time)}</time><span class="chip" style="--k:var(${t[1]})">${esc(t[0])}</span>${esc(l.text)}</span>`; }).join('');
   $('wire').innerHTML = items + items; $('wire').style.setProperty('--dur', Math.max(40, d.log.length * 7) + 's');
   const o = d.ops || {};
-  const f = [`NIGHT DESK · ONLINE`, `엔진 ${o.engine || '–'}`, `해석 ${o.ai || '–'}`, `이번 달 AI $${(o.ai_cost_usd_month ?? 0).toFixed(2)}`,
-    `Actions ${fmt(o.actions_min_month)}/${fmt(o.actions_min_limit)}분`, `${d.trades.wins}W/${d.trades.losses}L · 손익비 ${d.trades.avg_rr}`, `${d.session.venue}`, `${d.session.strategy}`, `갱신 ${new Date(d.updated_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}`]
-    .map(s => `<span>${esc(s)}</span>`).join('');
+  const f = [`NIGHT DESK · ONLINE`, `엔진 ${o.engine || '–'}`, `해석 ${o.ai || '–'}`, o.ai_cost_usd_month != null ? `이번 달 AI $${o.ai_cost_usd_month.toFixed(2)}` : '',
+    o.actions_min_month != null ? `Actions ${fmt(o.actions_min_month)}/${fmt(o.actions_min_limit)}분` : '', `${d.trades.wins}W/${d.trades.losses}L · 손익비 ${d.trades.avg_rr}`, `${d.session.venue}`, `${d.session.strategy}`, `갱신 ${new Date(d.updated_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}`]
+    .filter(Boolean).map(s => `<span>${esc(s)}</span>`).join('');
   $('foot').innerHTML = f + f;
 }
 function tick(){
@@ -402,14 +402,16 @@ function renderAgents(d){
 
 /* ── 리액터 ── */
 const R = { nodes: [], t: 0, geo: null, raf: 0 };
+const EMPTY = {name: '보유 없음', type: '—', price: 0, buy: 0, stop: 0, target: 0, target1: 0, tp_stage: '—'};
 function renderReactor(d){
-  const h = d.holdings[sel];
+  const h = d.holdings[sel] || EMPTY;
   $('rcap').textContent = `turn ${d.pipeline.at(-1).count} 체결 · ${d.agents.filter(a=>a.state==='active').length}개 작동`;
   $('feeds').innerHTML = (d.feeds || []).map(f => `<div class="feed" data-id="${esc(f.id)}" style="--k:var(--${FEED_K[f.id] || 'c1'})"><div class="h"><b>${esc(f.name)}</b><span>${esc(f.value)}</span></div><div class="s">${esc(f.src)}</div>${spark(f.series, css('--' + (FEED_K[f.id] || 'c1')), 24)}<span class="port"></span></div>`).join('');
   const rr = h.target > h.buy && h.buy > h.stop ? ((h.target - h.buy)/(h.buy - h.stop)).toFixed(1) : '–';
   const ch = (h.price/h.buy - 1)*100;
   $('stats').innerHTML = [['보유', h.name], ['유형', h.type], ['현재가', `<span class="${sgn(ch)}">${fmt(h.price)}</span>`], ['1차 목표', fmt(h.target1 || h.target)], ['손절', `<span class="down">${fmt(h.stop)}</span>`], [rr === '–' ? '익절 단계' : '손익비 · 단계', rr === '–' ? esc(h.tp_stage || '–') : `${rr} · ${esc(h.tp_stage || '')}`]]
     .map(([k,v]) => `<div><span>${k}</span><b>${k === '보유' || k === '유형' ? esc(v) : v}</b></div>`).join('');
+  if (h === EMPTY) $('stats').innerHTML = ['보유', '유형', '현재가', '1차 목표', '손절', '단계'].map((k,i) => `<div><span>${k}</span><b>${i ? '—' : '보유 없음'}</b></div>`).join('');
   const core = $('core'); core.querySelectorAll('.node').forEach(e => e.remove());
   R.nodes = d.agents.map(a => { const el = document.createElement('div'), g = GROUP[a.id] || 'c5';
     el.className = 'node s-' + a.state; el.style.setProperty('--k', `var(--${g})`); el.dataset.id = a.id;
@@ -420,7 +422,7 @@ function renderReactor(d){
     core.appendChild(el); return {a, el, g}; });
   const act = d.agents.find(a => a.state === 'active');
   $('orbl').innerHTML = `DESK<small style="--k:var(--${GROUP[act?.id] || 'c3'})">${act ? esc(act.name) + ' 작동 중' : '대기'}</small>`;
-  $('book').innerHTML = d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
+  $('book').innerHTML = (d.holdings.length ? '' : '<div class="bk" style="cursor:default"><div class="s">보유 종목 없음 · 승인 대기 중인 종목은 30분봉 신호를 기다립니다</div></div>') + d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
     return `<div class="bk" role="button" tabindex="0" aria-pressed="${i===sel}" data-i="${i}"><div class="h"><b>${esc(x.name)}</b><span class="c ${sgn(c)}">${pct(c)}</span></div>
       <div class="s"><span><span class="chip" style="--k:var(--${typeK(x.type)})">${esc(x.type)}</span></span><span>${esc(x.tp_stage || '')}</span></div>
       <div class="rng" title="손절 ${fmt(lo)} · 매수 ${fmt(x.buy)} · 목표 ${fmt(hi)}"><u style="left:${p(x.buy)}%"></u>${x.target1 ? `<u style="left:${p(x.target1)}%;background:var(--up)"></u>` : ''}<i style="left:${p(x.price)}%"></i></div>
@@ -484,7 +486,7 @@ function renderPnl(d){
   $('pnlr').textContent = `시작 ${fmt(d.start_balance)}원 기준`;
   $('pBig').innerHTML = masked ? '<small>₩</small>••,•••,•••' : `<small>₩</small>${fmt(d.balance)}`; $('pBig').className = 'big ' + sgn(dd);
   $('pSub').innerHTML = `전일 대비 <b class="${sgn(dd)}">${dd >= 0 ? '+' : '−'}${masked ? '•••' : fmt(Math.abs(dd))} (${pct(prev ? dd/prev*100 : 0)})</b> · 누적 <b class="${sgn(tot)}">${pct(tot)}</b>`;
-  $('pBox').innerHTML = [['오늘', `<span class="${sgn(d.today_return_pct)}">${pct(d.today_return_pct)}</span>`], ['승률', Math.round(T.wins/T.count*100) + '%'], ['거래', T.count], ['손익비', T.avg_rr]]
+  $('pBox').innerHTML = [['오늘', `<span class="${sgn(d.today_return_pct)}">${pct(d.today_return_pct)}</span>`], ['승률', T.count ? Math.round(T.wins/T.count*100) + '%' : '–'], ['거래', T.count], ['손익비', T.avg_rr]]
     .map(([k,v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
   drawEquity($('cEq'), d.equity);
   const cnt = {}; d.holdings.forEach(h => { const k = h.type || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
@@ -518,6 +520,8 @@ function drawEquity(box, P){
 /* ── 테이프 ── */
 function renderTape(d){
   const h = d.holdings[sel], narrow = innerWidth < 860;
+  if (!h) { $('tks').innerHTML = ''; $('tPx').textContent = ''; $('tCh').innerHTML = ''; $('tTy').innerHTML = ''; $('tMeta').textContent = '';
+    $('taper').textContent = ''; $('cT').innerHTML = '<div class="tip"></div><p class="muted mono" style="padding:40px 0;text-align:center">보유 종목이 없습니다. 승인된 종목이 30분봉 신호로 체결되면 여기에 차트가 나옵니다.</p>'; $('cV').innerHTML = ''; return; }
   $('tks').innerHTML = d.holdings.map((x,i) => `<button class="tk" aria-pressed="${i===sel}" data-i="${i}">${esc(x.name)} <span class="${sgn(x.day_change_pct)}">${pct(x.day_change_pct)}</span></button>`).join('');
   $('tks').querySelectorAll('.tk').forEach(b => b.onclick = () => { sel = +b.dataset.i; renderSel(); });
   $('tPx').textContent = fmt(h.price); $('tPx').className = 'px ' + sgn(h.day_change_pct);
@@ -631,7 +635,7 @@ function drawGantt(box, S){
 
 /* ── 그리기 ── */
 function renderSel(){ renderReactor(D); renderTape(D); }
-function render(d){ D = d; renderTop(d); renderAgents(d); renderReactor(d); renderPnl(d); renderTape(d); renderLower(d); tick(); }
+function render(d){ D = d; if (sel >= d.holdings.length) sel = 0; renderTop(d); renderAgents(d); renderReactor(d); renderPnl(d); renderTape(d); renderLower(d); tick(); }
 $('mask').onclick = () => { masked = !masked; store.set('nd-mask', masked ? '1' : '0'); renderTop(D); renderPnl(D); };
 $('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; store.set('nd-theme', root.dataset.theme); render(D); };
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => render(D), 150); });
