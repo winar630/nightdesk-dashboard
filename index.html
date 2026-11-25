@@ -64,7 +64,8 @@ body{margin:0}
 .strip{display:flex;flex-wrap:wrap;gap:6px 13px;align-items:center;font:600 11.5px var(--mono);letter-spacing:.02em;color:var(--text-secondary);padding:8px 14px}
 .strip b{color:var(--text-primary)}
 .strip .nb,.strip .nb b{font-weight:400}
-.strip .onair{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;color:#fff;background:#e0102d;border:1px solid #ff5a6e;
+.strip .nb b.bb{font-weight:700}
+.strip .onair{font-weight:400;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;color:#fff;background:#e0102d;border:1px solid #ff5a6e;
   text-shadow:0 0 4px #fff,0 0 10px #ff8a96;box-shadow:0 0 6px #ff2d48,0 0 14px rgba(255,45,72,.75),0 0 28px rgba(255,45,72,.45),inset 0 0 6px rgba(255,255,255,.35);
   animation:neon 2.4s ease-in-out infinite}
 .strip .onair .dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff,0 0 10px #ffd0d6;animation:blink 1.2s steps(2,start) infinite}
@@ -432,7 +433,7 @@ function renderTop(d){
       + (halted ? `<span class="onair"><span class="dot"></span>중지됨</span>` : ''); };
   const act = d.agents.filter(a => a.state === 'active').map(a => a.name), L = d.limits, P = d.pipeline;
   $('strip').innerHTML = `<span class="live"><span class="dot"></span>${d.agents.length} BOTS LIVE</span>
-    ${modeChip(d)}<span class="nb">작동 중 <b>${esc(act.join(' · ') || '없음')}</b></span>
+    ${modeChip(d)}<span class="nb">작동 중 <b class="bb">${esc(act.join(' · ') || '없음')}</b></span>
     <span class="nb">${P.map(p => `${esc(p.label)} <b>${fmt(p.count)}</b>`).join(' → ')}</span>
     <span class="nb">보유 <b>${L.holdings}/${L.holdings_max}</b></span><span class="nb">당일 매수 <b>${L.daily_buy_used_pct}/${L.daily_buy_max_pct}%</b></span>
     <span class="nb">월 손실 <b>${L.monthly_loss_pct}/${L.monthly_loss_max_pct}%</b></span>${d.ops ? `<span class="nb">승인 마감 <b>${esc(d.ops.approve_deadline)}</b></span>` : ''}`;
