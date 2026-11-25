@@ -783,7 +783,8 @@ if (!RM) R.raf = requestAnimationFrame(loop);
 const LIVE = 'https://raw.githubusercontent.com/winar630/nightdesk-dashboard/live/status.json';
 async function get(u){ try { const r = await fetch(u, {cache: 'no-store'}); return r.ok ? await r.json() : null; } catch (e) { return null; } }
 async function refresh(){
-  const [a, b] = await Promise.all([get(LIVE + '?t=' + Math.floor(Date.now()/60000)), get('data/status.json')]);
+  const q = '?t=' + Math.floor(Date.now()/60000);
+  const [a, b] = await Promise.all([get(LIVE + q).then(x => x || get(LIVE + '%0D' + q)), get('data/status.json')]);   // %0D: 예전 실행기가 만든 이름
   const d = [a, b].filter(Boolean).sort((x, y) => String(y.updated_at || '').localeCompare(String(x.updated_at || '')))[0];
   if (d) { loadedAt = Date.now(); render(d); }
 }
