@@ -613,7 +613,7 @@ function renderPnl(d){
   $('mixL').innerHTML = '보유 유형 · ' + ks.map(k => `<span><i style="background:var(--${typeK(k)})"></i>${esc(k)} ${cnt[k]}</span>`).join('');
   $('mix').innerHTML = ks.map(k => `<i style="flex:${cnt[k]};background:var(--${typeK(k)})"></i>`).join('');
 }
-/* 보유종목 표(비율만: 매수단가·현재가·비중·손익%) ↔ 그래프, 2초마다 전환. 마우스 올리면 멈춤 */
+/* 보유종목 표(비율만: 매수단가·현재가·비중·손익%) ↔ 그래프, 3초마다 전환. 마우스 올리면 멈춤 */
 let flipT = null, flipHold = false;
 function renderHold(d){
   const H = d.holdings || [], F = $('pFlip');
@@ -625,7 +625,7 @@ function renderHold(d){
     + `<tfoot><tr><td>합계</td><td></td><td></td><td>${tw.toFixed(1)}%</td><td class="${sgn(tr)}">${pct(tr)}</td></tr></tfoot></table>`;
   F.style.height = Math.max(150, 26 + (H.length + 1) * 21) + 'px';
   $('pDots').innerHTML = '<i></i><i></i>'; dotsFlip();
-  if (!flipT) flipT = setInterval(() => { if (!flipHold && !document.hidden) { F.classList.toggle('show-hold'); dotsFlip(); } }, 2000);
+  if (!flipT) flipT = setInterval(() => { if (!flipHold && !document.hidden) { F.classList.toggle('show-hold'); dotsFlip(); } }, 3000);
 }
 function dotsFlip(){ const on = $('pFlip').classList.contains('show-hold'); $('pDots').querySelectorAll('i').forEach((x, k) => x.classList.toggle('on', on ? k === 1 : k === 0)); }
 $('pFlip').addEventListener('mouseenter', () => flipHold = true);
