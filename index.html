@@ -172,6 +172,9 @@ body{margin:0}
 .rng i{animation:blink 3s linear infinite}
 @keyframes blink{0%,66.6%{opacity:1;background:var(--up);box-shadow:0 0 6px 2px color-mix(in srgb,var(--up) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--up) 22%,transparent)}83.2%{opacity:1;background:var(--text-primary);box-shadow:0 0 6px 2px color-mix(in srgb,var(--text-primary) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--text-primary) 22%,transparent)}83.3%,100%{opacity:0;background:var(--text-primary);box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.rng i{animation:none}}
+.spark{position:fixed;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;pointer-events:none;z-index:60;background:#fff;box-shadow:0 0 6px 2px color-mix(in srgb,var(--up) 80%,#fff),0 0 16px 6px color-mix(in srgb,var(--up) 45%,transparent)}
+.spark.t{width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:color-mix(in srgb,var(--up) 70%,#fff);box-shadow:0 0 8px 3px color-mix(in srgb,var(--up) 40%,transparent)}
+.sring{position:fixed;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;pointer-events:none;z-index:59;border:2px solid var(--up);box-shadow:0 0 10px 2px color-mix(in srgb,var(--up) 50%,transparent)}
 .rng u{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--text-muted)}
 .lim{margin-top:2px;display:grid;gap:6px}
 .lim .r{display:flex;justify-content:space-between;font:11.3px var(--mono);color:var(--text-secondary)}
@@ -636,12 +639,34 @@ function renderHold(d){
     + `<tfoot><tr><td>합계</td><td></td><td></td><td>${tw.toFixed(1)}%</td><td class="${sgn(tr)}">${pct(tr)}</td></tr></tfoot></table>`;
   F.style.height = Math.max(150, 26 + (H.length + 1) * 21) + 'px';
   $('pDots').innerHTML = '<i></i><i></i>'; dotsFlip();
-  if (!flipT) flipT = setInterval(() => { if (!flipHold && !document.hidden) { F.classList.toggle('show-hold'); dotsFlip(); } }, 3000);
+  if (!flipT) flipT = setInterval(() => { if (!flipHold && !document.hidden) { F.classList.toggle('show-hold'); dotsFlip(); if (F.classList.contains('show-hold')) flyPrices(); } }, 3000);
+}
+// 보유 표가 다시 나타날 때: 표의 현재가 → THE REACTOR 종목 카드의 현재가 점으로 섬광이 날아가 안착
+function flyPrices(){
+  if (RM || document.hidden) return;
+  setTimeout(() => {
+    const rows = $('pHold').querySelectorAll('tbody tr'), vw = innerWidth, vh = innerHeight, inV = r => r.width && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw;
+    rows.forEach((tr, i) => {
+      const td = tr.cells[2], dot = document.querySelector(`#book .bk[data-i="${i}"] .rng i`); if (!td || !dot) return;
+      const a = td.getBoundingClientRect(), b = dot.getBoundingClientRect(); if (!inV(a) || !inV(b)) return;
+      const x0 = a.right - 6, y0 = a.top + a.height/2, x1 = b.left + b.width/2, y1 = b.top + b.height/2;
+      const lift = Math.min(140, 40 + Math.hypot(x1 - x0, y1 - y0) * .18), mx = (x0 + x1)/2, my = Math.min(y0, y1) - lift;
+      const path = [0, .15, .3, .45, .6, .75, .9, 1].map(t => { const u = 1 - t, x = u*u*x0 + 2*u*t*mx + t*t*x1, y = u*u*y0 + 2*u*t*my + t*t*y1;
+        return {transform: `translate(${x}px,${y}px) scale(${1 + Math.sin(t*Math.PI)*.6})`, offset: t}; });
+      const dur = 750, delay = i * 140;
+      [0, 1, 2, 3].forEach(k => { const el = document.createElement('div'); el.className = 'spark' + (k ? ' t' : ''); el.style.opacity = 0; document.body.appendChild(el);
+        const an = el.animate(path.map((f, j) => Object.assign({}, f, {opacity: k ? (j === path.length - 1 ? 0 : .7 - k*.18) : 1})), {duration: dur, delay: delay + k*35, easing: 'cubic-bezier(.45,.05,.35,1)', fill: 'both'});
+        an.onfinish = () => { el.remove(); if (!k) { const r = document.createElement('div'); r.className = 'sring'; document.body.appendChild(r);
+          r.animate([{transform: `translate(${x1}px,${y1}px) scale(.6)`, opacity: 1}, {transform: `translate(${x1}px,${y1}px) scale(3.2)`, opacity: 0}], {duration: 520, easing: 'ease-out'}).onfinish = () => r.remove();
+          const d2 = document.querySelector(`#book .bk[data-i="${i}"] .rng i`); if (d2) d2.animate([{transform: 'scale(1.9)', filter: 'brightness(2)'}, {transform: 'scale(1)', filter: 'none'}], {duration: 380, easing: 'ease-out', composite: 'add'}); } };
+      });
+    });
+  }, 380);
 }
 function dotsFlip(){ const on = $('pFlip').classList.contains('show-hold'); $('pDots').querySelectorAll('i').forEach((x, k) => x.classList.toggle('on', on ? k === 1 : k === 0)); }
 $('pFlip').addEventListener('mouseenter', () => flipHold = true);
 $('pFlip').addEventListener('mouseleave', () => flipHold = false);
-$('pFlip').addEventListener('click', () => { $('pFlip').classList.toggle('show-hold'); dotsFlip(); });
+$('pFlip').addEventListener('click', () => { $('pFlip').classList.toggle('show-hold'); dotsFlip(); if ($('pFlip').classList.contains('show-hold')) flyPrices(); });
 
 function drawEquity(box, P){
   box.querySelector('svg')?.remove();
