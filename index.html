@@ -465,6 +465,12 @@ function renderTop(d){
     o.actions_min_month != null ? `Actions ${fmt(o.actions_min_month)}/${fmt(o.actions_min_limit)}분` : '', `${d.trades.wins}W/${d.trades.losses}L · 손익비 ${d.trades.avg_rr}`, `${d.session.venue}`, `${d.session.strategy}`, `시세 ${new Date(d.price_at || d.updated_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})} 기준`]
     .filter(Boolean).map(s => `<span${s.startsWith('시세 ') ? ' class="px"' : ''}>${esc(s)}</span>`).join('');
   $('foot').innerHTML = f + f;
+  requestAnimationFrame(() => {                     // 상태줄 이동 속도(px/초)를 LIVE WIRE와 같게
+    const w = $('wire'), ft = $('foot'), wd = parseFloat(w.style.getPropertyValue('--dur')) || 80, v = (w.scrollWidth / 2) / wd;
+    if (!(v > 0)) return;
+    const nd = (ft.scrollWidth / 2) / v, cur = parseFloat(ft.style.animationDuration) || 0;
+    if (Math.abs(nd - cur) / nd > 0.05) ft.style.animationDuration = nd.toFixed(1) + 's';
+  });
 }
 function tick(){
   if (!D) return; const now = nowKST(); $('clock').textContent = hhmm(now);
