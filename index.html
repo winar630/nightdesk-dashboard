@@ -794,9 +794,36 @@ async function refresh(){
   const q = '?t=' + Math.floor(Date.now()/20000);
   const [a, b] = await Promise.all([get(LIVE + q).then(x => x || get(LIVE + '%0D' + q)), get('data/status.json')]);   // %0D: 예전 실행기가 만든 이름
   const d = [a, b].filter(Boolean).sort((x, y) => String(y.price_at || y.updated_at || '').localeCompare(String(x.price_at || x.updated_at || '')))[0];
-  if (d) { loadedAt = Date.now(); render(d); }
+  if (d) { BASE = d; loadedAt = Date.now(); render(overlay(d)); }
 }
-if (location.protocol.startsWith('http')) { refresh(); setInterval(refresh, 20000); }   // 시세는 집 PC가 20~30초마다 올린다
+// 장중 시세는 Firebase 실시간 DB(/live)에서 바로 받는다(1~2초). 전체 자료는 위 refresh 가 20초마다.
+const FB = 'https://nightdesk-live-default-rtdb.asia-southeast1.firebasedatabase.app';
+let BASE = null, FL = null;
+function overlay(d){
+  if (!FL || !FL.price_at || String(FL.price_at) <= String(d.price_at || d.updated_at || '')) return d;
+  const o = Object.assign({}, d, {price_at: FL.price_at});
+  ['balance', 'today_return_pct', 'total_return_pct'].forEach(k => { if (FL[k] != null) o[k] = FL[k]; });
+  const H = FL.holdings || {};
+  o.holdings = (d.holdings || []).map(h => H[h.code] ? Object.assign({}, h, Object.fromEntries(Object.entries(H[h.code]).filter(([, v]) => v != null))) : h);
+  return o;
+}
+function setPath(path, v){
+  if (path === '/' || !path) { FL = v; return; }
+  FL = FL || {}; const ks = path.split('/').filter(Boolean); let t = FL;
+  ks.slice(0, -1).forEach(k => { t = t[k] = (t[k] && typeof t[k] === 'object') ? t[k] : {}; });
+  t[ks[ks.length - 1]] = v;
+}
+function fbLive(){
+  if (!window.EventSource) return;
+  const es = new EventSource(FB + '/live.json');
+  const on = (e, patch) => { try { const m = JSON.parse(e.data); if (!m) return;
+      if (patch) Object.entries(m.data || {}).forEach(([k, v]) => setPath((m.path === '/' ? '' : m.path) + '/' + k, v)); else setPath(m.path, m.data);
+      if (BASE || D) render(overlay(BASE || D)); } catch (x) {} };
+  es.addEventListener('put', e => on(e, false));
+  es.addEventListener('patch', e => on(e, true));
+  es.onerror = () => { if (es.readyState === 2) setTimeout(fbLive, 30000); };
+}
+if (location.protocol.startsWith('http')) { refresh(); setInterval(refresh, 20000); fbLive(); }
 </script>
 </body>
 </html>
