@@ -169,6 +169,9 @@ body{margin:0}
 .bk .s{display:flex;justify-content:space-between;font:10.8px var(--mono);color:var(--text-muted);margin:2px 0 5px}
 .rng{position:relative;height:5px;border-radius:3px;background:linear-gradient(90deg,color-mix(in srgb,var(--down) 35%,transparent),var(--grid) 45%,color-mix(in srgb,var(--up) 35%,transparent))}
 .rng i{position:absolute;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--text-primary);border:2px solid var(--panel)}
+.rng i{animation:blink 3s linear infinite}
+@keyframes blink{0%{opacity:1}99%{opacity:.12}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.rng i{animation:none}}
 .rng u{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--text-muted)}
 .lim{margin-top:2px;display:grid;gap:6px}
 .lim .r{display:flex;justify-content:space-between;font:11.3px var(--mono);color:var(--text-secondary)}
@@ -523,7 +526,7 @@ function renderReactor(d){
   $('book').innerHTML = (d.holdings.length ? '' : '<div class="bk" style="cursor:default"><div class="s">보유 종목 없음 · 승인 대기 종목은 30분봉 추세 + 5분봉 타점을 기다립니다</div></div>') + d.holdings.map((x,i) => { const c = (x.price/x.buy - 1)*100, lo = x.stop, hi = x.target, p = v => Math.max(0, Math.min(100, (v-lo)/(hi-lo)*100));
     return `<div class="bk ${c > 0 ? 'bk-up' : c < 0 ? 'bk-down' : 'bk-flat'}" role="button" tabindex="0" aria-pressed="${i===sel}" data-i="${i}"><div class="h"><b>${esc(x.name)}</b><span class="c ${sgn(c)}">${pct(c)}</span></div>
       <div class="s"><span><span class="chip" style="--k:var(--${typeK(x.type)})">${esc(x.type)}</span></span><span>${esc(x.tp_stage || '')}</span></div>
-      <div class="rng" title="${stopName(x)} ${fmt(lo)} · 매수 ${fmt(x.buy)} · 목표 ${fmt(hi)}"><u style="left:${p(x.buy)}%"></u>${x.target1 ? `<u style="left:${p(x.target1)}%;background:var(--up)"></u>` : ''}<i style="left:${p(x.price)}%"></i></div>
+      <div class="rng" title="${stopName(x)} ${fmt(lo)} · 매수 ${fmt(x.buy)} · 목표 ${fmt(hi)}"><u style="left:${p(x.buy)}%"></u>${x.target1 ? `<u style="left:${p(x.target1)}%;background:var(--up)"></u>` : ''}<i style="left:${p(x.price)}%;animation-delay:-${Date.now() % 3000}ms"></i></div>
       <div class="s" style="margin:4px 0 0"><span>${stopName(x)} ${fmt(lo)}</span><span>${fmt(x.price)}</span><span>2차 ${fmt(hi)}</span></div></div>`; }).join('')
     + `<div class="lim">${[['보유 종목', d.limits.holdings, d.limits.holdings_max, ''], ['당일 신규 매수', d.limits.daily_buy_used_pct, d.limits.daily_buy_max_pct, '%'], ['월 손실', d.limits.monthly_loss_pct, d.limits.monthly_loss_max_pct, '%']]
       .map(([k,v,m,u]) => { const r = v/m; return `<div><div class="r"><span>${k}</span><b>${v}${u} / ${m}${u}</b></div><div class="bar" style="--k:var(${r >= 1 ? '--critical' : r > .8 ? '--warning' : '--accent'})"><i style="width:${Math.min(100, r*100)}%"></i></div></div>`; }).join('')}</div>`;
