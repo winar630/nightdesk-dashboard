@@ -337,7 +337,7 @@ body{margin:0}
 <div class="panel wire"><div class="lab">LIVE WIRE</div><div class="track"><div class="belt" id="wire"></div></div></div>
 
 <section class="panel reactor" id="reactor" style="--k:var(--c5)">
-  <div class="cap">The Reactor <span class="sub">— 11개 봇이 링을 돌린다 · 한 장의 주문표가 흐름을 탄다 · 데스크가 중심</span><span class="r" id="rcap"></span></div>
+  <div class="cap">The Reactor <span class="sub">— 12개 봇이 링을 돌린다 · 한 장의 주문표가 흐름을 탄다 · 데스크가 중심</span><span class="r" id="rcap"></span></div>
   <div class="rgrid">
     <div class="feeds" id="feeds"></div>
     <div class="core" id="core">
@@ -355,7 +355,7 @@ body{margin:0}
 
 <div class="row r1">
   <section class="panel pnl" id="pnlBox" style="--k:var(--c3)">
-    <div class="cap">P&amp;L <span class="sub">— 한 계좌 · 11개 봇</span><span class="r" id="pnlr"></span></div>
+    <div class="cap">P&amp;L <span class="sub">— 한 계좌 · 12개 봇</span><span class="r" id="pnlr"></span></div>
     <div class="big" id="pBig">–</div>
     <div class="sb" id="pSub"></div>
     <div class="flip" id="pFlip" style="height:150px"><div class="dots" id="pDots"></div>
@@ -413,13 +413,13 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const css = v => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(v).trim();
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const GROUP = {scan:'c1',zone:'c1',news:'c1',gate:'c2',size:'c2',debate:'c2',report:'c3',approve:'c5',exec:'c4',tp:'c4',stop:'c4'};
-const GNAME = {c1:'신호',c2:'판단',c3:'보고',c4:'실행',c5:'사용자'};
-const BOT_ID = {'스캐너':'scan','매물대':'zone','공시':'news','리스크':'gate','수량':'size','토론':'debate','리포터':'report','실행':'exec','익절':'tp','스탑':'stop','사용자':'approve'};
-const FEED_K = {price:'c1',zone:'c6',dart:'c2',gate:'c3',size:'c5',ai:'c6',tg:'c3',m30:'c5',stopline:'c2',fill:'c4'};
+const GROUP = {scan:'c1',zone:'c1',news:'c1',gate:'c2',size:'c2',debate:'c2',report:'c3',approve:'c5',exec:'c4',tp:'c4',stop:'c4',study:'c6'};
+const GNAME = {c1:'신호',c2:'판단',c3:'보고',c4:'실행',c5:'사용자',c6:'검증'};
+const BOT_ID = {'스캐너':'scan','매물대':'zone','공시':'news','리스크':'gate','수량':'size','토론':'debate','리포터':'report','실행':'exec','익절':'tp','스탑':'stop','사용자':'approve','자료검증':'study'};
+const FEED_K = {price:'c1',zone:'c6',dart:'c2',gate:'c3',size:'c5',ai:'c6',tg:'c3',m30:'c5',stopline:'c2',fill:'c4',study:'c6'};
 const FEED_RIGHT = ['zone', 'dart', 'gate', 'size', 'ai'];   // 링 오른쪽 봇(④⑤⑥⑦⑫)의 배너
 const FEED_SEEN = {}, FEED_PULSE = {};
-const FEED_TO = {price:'scan',zone:'zone',dart:'news',gate:'gate',size:'size',ai:'debate',tg:'approve',m30:'exec',stopline:'stop',fill:'tp'};
+const FEED_TO = {price:'scan',zone:'zone',dart:'news',gate:'gate',size:'size',ai:'debate',tg:'approve',m30:'exec',stopline:'stop',fill:'tp',study:'study'};
 const STATE = {active:'RUN',done:'DONE',idle:'IDLE',wait:'WAIT',error:'ALERT'};
 const TAG = {info:['INFO','--text-muted'],fill:['FILL','--good'],approve:['승인','--c5'],skip:['SKIP','--warning'],error:['ERR','--critical']};
 const TYPE_K = {'매수1':'c1','매수2':'c2','매수3':'c6'};
@@ -777,6 +777,10 @@ function drawCandles(box, C, h, o){
 }
 
 /* ── 트레이스 · 후보 · 일정 ── */
+// ⑫ 자료검증(15절) 칩: '매수1 해당 · …' / '매수3 애매함 · …' / '탈락 · …'
+const stChip = t => { if (!t) return '<span class="muted">–</span>';
+  const v = t.startsWith('탈락') ? ['탈락', '--text-muted'] : t.includes(' 해당') ? [t.slice(0, 3) + ' 해당', '--good'] : [t.slice(0, 3) + ' 애매', '--warning'];
+  return `<span class="chip" title="${esc('15절: ' + t)}" style="--k:var(${v[1]})">${esc(v[0])}</span>`; };
 function renderLower(d){
   const fills = d.log.filter(l => l.level === 'fill').length;
   $('trr').textContent = `${d.log.length}단계 · 체결 ${fills}`;
@@ -785,9 +789,9 @@ function renderLower(d){
   const C = d.candidates.filter(c => !c.result.startsWith('탈락')), pass = C.length;   // 탈락 종목은 표에서 뺀다(사유는 텔레그램 리포트)
   $('cdr').textContent = `후보 ${d.candidates.length}개 중 ${pass}개 통과`;
   const sc = v => { if (v == null) return '<span class="muted">–</span>'; const a = Math.abs(v); return `<span class="sc" title="${v}">${[0,1,2].map(i => `<i class="${i < a ? (v < 0 ? 'neg' : 'on') : ''}"></i>`).join('')}</span>`; };
-  $('cand').innerHTML = `<tr><th>종목</th><th>유형</th><th>매물</th><th>공시</th><th>합</th><th>결과 · 토론</th></tr>` + C.map(c => { const out = c.result.startsWith('탈락');
+  $('cand').innerHTML = `<tr><th>종목</th><th>유형</th><th>매물</th><th>공시</th><th>합</th><th>자료</th><th>결과 · 토론</th></tr>` + C.map(c => { const out = c.result.startsWith('탈락');
     const rv = c.review && c.review !== '—' ? `<span class="chip" style="--k:var(${c.review === '유지' ? '--good' : '--warning'})">${esc(c.review)}</span>` : '';
-    return `<tr class="${out ? 'out' : ''}"><td class="nm">${esc(c.name.replace('샘플종목 ', ''))}</td><td><span class="chip" style="--k:var(--${typeK(c.type)})">${esc(c.type.slice(0,3))}</span></td><td>${sc(c.zone)}</td><td>${sc(c.news)}</td><td><b>${c.total ?? '–'}</b></td><td style="white-space:normal">${esc(c.result)} ${rv}</td></tr>`; }).join('') + (C.length ? '' : `<tr><td colspan="6" class="muted" style="text-align:center;padding:14px">통과 종목 없음</td></tr>`);
+    return `<tr class="${out ? 'out' : ''}"><td class="nm">${esc(c.name.replace('샘플종목 ', ''))}</td><td><span class="chip" style="--k:var(--${typeK(c.type)})">${esc(c.type.slice(0,3))}</span></td><td>${sc(c.zone)}</td><td>${sc(c.news)}</td><td><b>${c.total ?? '–'}</b></td><td>${stChip(c.study)}</td><td style="white-space:normal">${esc(c.result)} ${rv}</td></tr>`; }).join('') + (C.length ? '' : `<tr><td colspan="7" class="muted" style="text-align:center;padding:14px">통과 종목 없음</td></tr>`);
   drawGantt($('cG'), d.schedule || []);
   $('ord').innerHTML = d.orders.map(o => `<div><time>${esc(o.time)}</time><span>${esc(o.name)} · ${esc(o.side)} ${o.price ? fmt(o.price) : ''}</span><span class="chip" style="--k:var(${o.status === '체결' ? '--good' : '--warning'})">${esc(o.status)}</span></div>`).join('');
 }
