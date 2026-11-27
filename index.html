@@ -73,7 +73,17 @@ body{margin:0}
   50%{box-shadow:0 0 9px #ff2d48,0 0 22px rgba(255,45,72,.9),0 0 44px rgba(255,45,72,.6),inset 0 0 8px rgba(255,255,255,.5)}
   92%{opacity:1}94%{opacity:.75}96%{opacity:1}}
 @keyframes blink{to{visibility:hidden}}
-@media (prefers-reduced-motion:reduce){.strip .onair,.strip .onair .dot{animation:none}}
+/* 작동 중: 봇이 돌면 ON AIR처럼 붉게 점등, 없으면 회색으로 꺼진 느낌(11-27) */
+.strip .run{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;font-weight:400}
+.strip .run .dot{width:7px;height:7px;border-radius:50%}
+.strip .run.off{color:var(--text-muted);background:color-mix(in srgb,var(--text-muted) 10%,transparent);border:1px solid color-mix(in srgb,var(--text-muted) 30%,transparent)}
+.strip .run.off .dot{background:var(--text-muted);opacity:.55}
+.strip .run.off b{color:var(--text-muted)}
+.strip .run.on{color:#fff;background:#e0102d;border:1px solid #ff5a6e;text-shadow:0 0 4px #fff,0 0 10px #ff8a96;
+  box-shadow:0 0 6px #ff2d48,0 0 14px rgba(255,45,72,.75),0 0 28px rgba(255,45,72,.45),inset 0 0 6px rgba(255,255,255,.35);animation:neon 2.4s ease-in-out infinite}
+.strip .run.on b{color:#fff}
+.strip .run.on .dot{background:#fff;box-shadow:0 0 6px #fff,0 0 10px #ffd0d6;animation:blink 1.2s steps(2,start) infinite}
+@media (prefers-reduced-motion:reduce){.strip .onair,.strip .onair .dot,.strip .run.on,.strip .run.on .dot{animation:none}}
 
 .strip .live{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--good) 12%,transparent);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 35%,transparent)}
 .wire{display:flex;align-items:center;overflow:hidden;padding:0;height:34px}
@@ -169,8 +179,8 @@ body{margin:0}
 .bk .s{display:flex;justify-content:space-between;font:10.8px var(--mono);color:var(--text-muted);margin:2px 0 5px}
 .rng{position:relative;height:5px;border-radius:3px;background:linear-gradient(90deg,color-mix(in srgb,var(--down) 35%,transparent),var(--grid) 45%,color-mix(in srgb,var(--up) 35%,transparent))}
 .rng i{position:absolute;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--text-primary);border:2px solid var(--panel)}
-.rng i{animation:blink 3s linear infinite}
-@keyframes blink{0%,66.6%{opacity:1;background:var(--up);box-shadow:0 0 6px 2px color-mix(in srgb,var(--up) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--up) 22%,transparent)}83.2%{opacity:1;background:var(--text-primary);box-shadow:0 0 6px 2px color-mix(in srgb,var(--text-primary) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--text-primary) 22%,transparent)}83.3%,100%{opacity:0;background:var(--text-primary);box-shadow:none}}
+.rng i{animation:pxblink 3s linear infinite}
+@keyframes pxblink{0%,66.6%{opacity:1;background:var(--up);box-shadow:0 0 6px 2px color-mix(in srgb,var(--up) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--up) 22%,transparent)}83.2%{opacity:1;background:var(--text-primary);box-shadow:0 0 6px 2px color-mix(in srgb,var(--text-primary) 55%,transparent),0 0 14px 4px color-mix(in srgb,var(--text-primary) 22%,transparent)}83.3%,100%{opacity:0;background:var(--text-primary);box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.rng i{animation:none}}
 .spark{position:fixed;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;pointer-events:none;z-index:60;background:#fff;box-shadow:0 0 6px 2px color-mix(in srgb,var(--up) 80%,#fff),0 0 16px 6px color-mix(in srgb,var(--up) 45%,transparent)}
 .spark.t{width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:color-mix(in srgb,var(--up) 70%,#fff);box-shadow:0 0 8px 3px color-mix(in srgb,var(--up) 40%,transparent)}
@@ -459,7 +469,7 @@ function renderTop(d){
       + (halted ? `<span class="onair"><span class="dot"></span>중지됨</span>` : ''); };
   const act = d.agents.filter(a => a.state === 'active').map(a => a.name), L = d.limits, P = d.pipeline;
   $('strip').innerHTML = `<span class="live"><span class="dot"></span>${d.agents.length} BOTS LIVE</span>
-    ${modeChip(d)}<span class="nb">작동 중 <b class="bb">${esc(act.join(' · ') || '없음')}</b></span>
+    ${modeChip(d)}<span class="run ${act.length ? 'on' : 'off'}"><span class="dot"></span>작동 중 <b class="bb">${esc(act.join(' · ') || '없음')}</b></span>
     <span class="nb">${P.map(p => `${esc(p.label)} <b>${fmt(p.count)}</b>`).join(' → ')}</span>
     <span class="nb">보유 <b>${L.holdings}/${L.holdings_max}</b></span><span class="nb">당일 매수 <b>${L.daily_buy_used_pct}/${L.daily_buy_max_pct}%</b></span>
     <span class="nb">월 손실 <b>${L.monthly_loss_pct}/${L.monthly_loss_max_pct}%</b></span>${d.ops ? `<span class="nb">승인 마감 <b>${esc(d.ops.approve_deadline)}</b></span>` : ''}`;
