@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -440,7 +440,7 @@ const typeK = t => TYPE_K[(t || '').slice(0,3)] || 'c3';
 const kOfBot = name => 'var(--' + (GROUP[BOT_ID[name]] || 'c5') + ')';
 
 let D = EMBED, sel = 0, tab = 'd', masked = store.get('nd-mask') === '1', loadedAt = Date.now();
-if (store.get('nd-theme')) root.dataset.theme = store.get('nd-theme');
+root.dataset.theme = store.get('nd-theme2') || 'dark';   // 11-27: 기본 다크. 버튼으로 바꾸면 그 선택을 기억
 
 /* ── 공통 그림 ── */
 function spark(arr, col, h=22, fill=true){
@@ -828,7 +828,7 @@ function drawGantt(box, S){
 function renderSel(){ renderReactor(D); renderTape(D); }
 function render(d){ D = d; if (sel >= d.holdings.length) sel = 0; renderTop(d); renderAgents(d); renderReactor(d); renderPnl(d); renderTape(d); renderLower(d); tick(); }
 $('mask').onclick = () => { masked = !masked; store.set('nd-mask', masked ? '1' : '0'); renderTop(D); renderPnl(D); };
-$('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; store.set('nd-theme', root.dataset.theme); render(D); };
+$('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; store.set('nd-theme2', root.dataset.theme); render(D); };
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => render(D), 150); });
 render(EMBED);
 if (!RM) R.raf = requestAnimationFrame(loop);
