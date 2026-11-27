@@ -65,13 +65,13 @@ body{margin:0}
 .strip b{color:var(--text-primary)}
 .strip .nb,.strip .nb b{font-weight:400}
 .strip .nb b.bb{font-weight:700}
-.strip .onair{font-weight:400;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;color:#fff;background:#e0102d;border:1px solid #ff5a6e;
-  text-shadow:0 0 4px #fff,0 0 10px #ff8a96;box-shadow:0 0 6px #ff2d48,0 0 14px rgba(255,45,72,.75),0 0 28px rgba(255,45,72,.45),inset 0 0 6px rgba(255,255,255,.35);
+.strip .onair{font-weight:400;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;color:#fff;background:#0b9a55;border:1px solid #3fdc8e;
+  text-shadow:0 0 4px rgba(255,255,255,.8),0 0 10px #8ff0bf;box-shadow:0 0 6px #19c46d,0 0 14px rgba(25,196,109,.7),0 0 28px rgba(25,196,109,.4),inset 0 0 6px rgba(255,255,255,.3);
   animation:neon 2.4s ease-in-out infinite}
-.strip .onair .dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff,0 0 10px #ffd0d6;animation:blink 1.2s steps(2,start) infinite}
-@keyframes neon{0%,100%{box-shadow:0 0 6px #ff2d48,0 0 14px rgba(255,45,72,.75),0 0 28px rgba(255,45,72,.45),inset 0 0 6px rgba(255,255,255,.35)}
-  50%{box-shadow:0 0 9px #ff2d48,0 0 22px rgba(255,45,72,.9),0 0 44px rgba(255,45,72,.6),inset 0 0 8px rgba(255,255,255,.5)}
-  92%{opacity:1}94%{opacity:.75}96%{opacity:1}}
+.strip .onair .dot{width:8px;height:8px;border-radius:50%;background:#ff1f3d;box-shadow:0 0 0 1.5px #fff,0 0 6px #ff2d48,0 0 12px #ff2d48;animation:blink 1.2s steps(2,start) infinite}
+@keyframes neon{0%,100%{box-shadow:0 0 6px #19c46d,0 0 14px rgba(25,196,109,.7),0 0 28px rgba(25,196,109,.4),inset 0 0 6px rgba(255,255,255,.3)}
+  50%{box-shadow:0 0 9px #19c46d,0 0 22px rgba(25,196,109,.85),0 0 44px rgba(25,196,109,.55),inset 0 0 8px rgba(255,255,255,.45)}
+  92%{opacity:1}94%{opacity:.8}96%{opacity:1}}
 @keyframes blink{to{visibility:hidden}}
 /* 작동 중: 봇이 돌면 ON AIR처럼 붉게 점등, 없으면 회색으로 꺼진 느낌(11-27) */
 .strip .run{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;font-weight:400}
@@ -79,10 +79,11 @@ body{margin:0}
 .strip .run.off{color:var(--text-muted);background:color-mix(in srgb,var(--text-muted) 10%,transparent);border:1px solid color-mix(in srgb,var(--text-muted) 30%,transparent)}
 .strip .run.off .dot{background:var(--text-muted);opacity:.55}
 .strip .run.off b{color:var(--text-muted)}
-.strip .run.on{color:#fff;background:#e0102d;border:1px solid #ff5a6e;text-shadow:0 0 4px #fff,0 0 10px #ff8a96;
-  box-shadow:0 0 6px #ff2d48,0 0 14px rgba(255,45,72,.75),0 0 28px rgba(255,45,72,.45),inset 0 0 6px rgba(255,255,255,.35);animation:neon 2.4s ease-in-out infinite}
-.strip .run.on b{color:#fff}
-.strip .run.on .dot{background:#fff;box-shadow:0 0 6px #fff,0 0 10px #ffd0d6;animation:blink 1.2s steps(2,start) infinite}
+/* 작동 중(on): 배경은 차분하게, 탤리 램프(빨간 점)만 숨 쉬듯 — ON AIR 네온과 겹치지 않게 */
+.strip .run.on{color:var(--text-primary);background:color-mix(in srgb,#ff2d48 7%,transparent);border:1px solid color-mix(in srgb,#ff2d48 45%,transparent)}
+.strip .run.on b{color:var(--text-primary)}
+.strip .run.on .dot{background:#ff1f3d;box-shadow:0 0 6px #ff2d48,0 0 12px rgba(255,45,72,.7);animation:tally 1.6s ease-in-out infinite}
+@keyframes tally{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){.strip .onair,.strip .onair .dot,.strip .run.on,.strip .run.on .dot{animation:none}}
 
 .strip .live{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--good) 12%,transparent);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 35%,transparent)}
