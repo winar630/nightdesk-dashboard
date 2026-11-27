@@ -88,7 +88,9 @@ body{margin:0}
 
 .strip .live{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--text-muted) 10%,transparent);color:var(--good);border:1px solid color-mix(in srgb,var(--text-muted) 30%,transparent)}
 .wire{display:flex;align-items:center;overflow:hidden;padding:0;height:34px}
-.wire .lab{flex:none;height:100%;display:grid;place-items:center;padding:0 12px;background:var(--text-primary);color:var(--panel);font:800 9px var(--mono);letter-spacing:.16em;border-radius:13px 0 0 13px;z-index:1}
+.wire .lab{flex:none;height:100%;display:flex;align-items:center;gap:7px;padding:0 14px;background:color-mix(in srgb,var(--text-muted) 8%,transparent);color:var(--text-secondary);
+  font:800 9px var(--mono);letter-spacing:.16em;border-radius:13px 0 0 13px;border-right:1px solid color-mix(in srgb,var(--text-muted) 22%,transparent);z-index:1}
+.wire .lab::before{content:"";width:6px;height:6px;border-radius:50%;background:#ff1f3d;box-shadow:0 0 5px #ff2d48;animation:tally 1.6s ease-in-out infinite}
 .wire .track{flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
 .belt{display:inline-flex;gap:28px;white-space:nowrap;padding-left:20px;animation:belt var(--dur,80s) linear infinite}
 .panel:hover .belt{animation-play-state:paused}
