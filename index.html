@@ -831,7 +831,10 @@ function drawGantt(box, S){
 
 /* ── 그리기 ── */
 function renderSel(){ renderReactor(D); renderTape(D); }
-function render(d){ D = d; if (sel >= d.holdings.length) sel = 0; renderTop(d); renderAgents(d); renderReactor(d); renderPnl(d); renderTape(d); renderLower(d); tick(); }
+const buyAmt = h => (h.weight_pct || 0) * (h.price ? (h.buy || h.price) / h.price : 1);   // 매수 금액 비중(평가 비중 × 매수가/현재가)
+function render(d){ const sc = D && D.holdings && D.holdings[sel] && D.holdings[sel].code;
+  d.holdings = (d.holdings || []).slice().sort((a, b) => buyAmt(b) - buyAmt(a));   // 11-28: 매수(보유) 금액 큰 순
+  D = d; sel = Math.max(0, d.holdings.findIndex(h => h.code === sc)); if (sel >= d.holdings.length) sel = 0; renderTop(d); renderAgents(d); renderReactor(d); renderPnl(d); renderTape(d); renderLower(d); tick(); }
 $('mask').onclick = () => { masked = !masked; store.set('nd-mask', masked ? '1' : '0'); renderTop(D); renderPnl(D); };
 $('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; store.set('nd-theme2', root.dataset.theme); render(D); };
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => render(D), 150); });
