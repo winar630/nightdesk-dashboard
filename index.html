@@ -452,8 +452,8 @@ function spark(arr, col, h=22, fill=true){
 function nowKST(){
   // 예시 데이터일 때는 데이터 시각부터 흘러가는 시계를 쓴다
   const S = new Date(D.session.start), real = Date.now();
-  const sameDay = new Date(real + 9*36e5).toISOString().slice(0,10) === new Date(S.getTime() + 9*36e5).toISOString().slice(0,10);
-  return sameDay ? real : new Date(D.updated_at).getTime() + (real - loadedAt);
+  const sameDay = new Date(real + 9*36e5).toISOString().slice(0,10) === new Date(S + 9*36e5).toISOString().slice(0,10);
+  return real;   // 11-28: 시계는 항상 실제 한국 시각(예전엔 데이터 날짜가 다르면 데이터 시각부터 흘렀음)
 }
 const hhmm = ms => new Date(ms + 9*36e5).toISOString().slice(11,19);
 
@@ -494,7 +494,10 @@ function renderTop(d){
 function tick(){
   if (!D) return; const now = nowKST(); $('clock').textContent = hhmm(now);
   const E = new Date(D.session.end).getTime(), S = new Date(D.session.start).getTime();
-  $('clockSub').textContent = now < S ? 'KST · 장 시작 전' : now < E ? 'KST · 장 마감까지 ' + hhmm(E - now - 9*36e5) : 'KST · 장 마감';
+  const kd = new Date(now + 9*36e5).toISOString().slice(0,10), sd = new Date(S + 9*36e5).toISOString().slice(0,10);
+  const asof = new Date(new Date(D.updated_at).getTime() + 9*36e5).toISOString();
+  $('clockSub').textContent = kd !== sd ? `KST · 마지막 데이터 ${asof.slice(5,10)} ${asof.slice(11,16)}`
+    : now < S ? 'KST · 장 시작 전' : now < E ? 'KST · 장 마감까지 ' + hhmm(E - now - 9*36e5) : 'KST · 장 마감';
 }
 setInterval(tick, 1000);
 
